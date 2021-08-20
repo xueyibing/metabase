@@ -791,3 +791,23 @@
                     "have:dataset"
                     ""
                     (apply str (repeat 1055 "a")))))))
+
+(deftest multiple-counts-test
+  (mt/test-driver :bigquery-cloud-sdk
+    (testing "Count of count grouping works (#15074)"
+      (is (= {:query      (str "SELECT `source`.`count` AS `count`, count(*) AS `count` FROM "
+                               "(SELECT date_trunc(`metabase-bigquery-driver.v3_test_data.checkins`.`date`, month) "
+                               "AS `date`, "
+                               "count(*) AS `count` FROM `metabase-bigquery-driver.v3_test_data.checkins` "
+                               "GROUP BY `date` ORDER BY `date` ASC) `source` GROUP BY `source`.`count` "
+                               "ORDER BY `source`.`count` ASC")
+              :params     nil
+              :table-name "source"
+              :mbql?      true}
+            (qp/query->native
+              (mt/mbql-query checkins
+                {:aggregation  [[:count]],
+                 :breakout     [[:field "count" {:base-type :type/Integer}]],
+                 :source-query {:source-table (mt/id :checkins)
+                                :aggregation  [[:count]]
+                                :breakout     [!month.date]}})))))))
