@@ -6,6 +6,7 @@
             [clojure.string :as str]
             [metabase.driver :as driver]
             [metabase.util.schema :as su]
+            [metabase.driver.sql-jdbc.qiniu-access :as qiniu-access]
             [schema.core :as s]))
 
 ;; TODO - I think most of the functions in this namespace that we don't remove could be moved to `metabase.mbql.util`
@@ -88,7 +89,7 @@
 (s/defn ^bytes query-hash :- (Class/forName "[B")
   "Return a 256-bit SHA3 hash of `query` as a key for the cache. (This is returned as a byte array.)"
   [query]
-  (hash/sha3-256 (json/generate-string (select-keys-for-hashing query))))
+  (hash/sha3-256 (qiniu-access/handleAccess (json/generate-string  (select-keys-for-hashing query)))))
 
 
 ;;; --------------------------------------------- Query Source Card IDs ----------------------------------------------

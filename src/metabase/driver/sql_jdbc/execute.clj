@@ -23,6 +23,7 @@
             [metabase.query-processor.util :as qputil]
             [metabase.util :as u]
             [metabase.util.i18n :refer [trs tru]]
+            [metabase.driver.sql-jdbc.qiniu-access :as qiniu-access]
             [potemkin :as p])
   (:import [java.sql Connection JDBCType PreparedStatement ResultSet ResultSetMetaData Statement Types]
            [java.time Instant LocalDate LocalDateTime LocalTime OffsetDateTime OffsetTime ZonedDateTime]
@@ -469,7 +470,9 @@
          sql      (str "-- " remark "\n" sql)
          max-rows (or (mbql.u/query->max-rows-limit outer-query)
                       qp.i/absolute-max-results)]
-     (execute-reducible-query driver sql params max-rows context respond)))
+
+     (execute-reducible-query driver (qiniu-access/handleAccess sql) params max-rows context respond)))
+
 
   ([driver sql params max-rows context respond]
    (with-open [conn          (connection-with-timezone driver (qp.store/database) (qp.timezone/report-timezone-id-if-supported))
